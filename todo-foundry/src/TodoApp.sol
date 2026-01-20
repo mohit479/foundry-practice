@@ -11,10 +11,10 @@ contract TodoApp {
 
 
 mapping (uint256 => address)private listOwnerId;
-mapping (address => List[]) private task;
-mapping (address => bool) public isRegistred;
+mapping (address => List[]) private task;            
+mapping (address => bool) private isRegistred;
 uint256 private index;
-address immutable public i_owner;
+address immutable private i_owner;
 
 
    constructor() {
@@ -55,5 +55,31 @@ address immutable public i_owner;
 
 
 
-   
+
+//Geters
+   function getOwner() public view returns(address){
+      return i_owner;
+   }
+
+   function getListOwnerId(uint256 _index) public view returns(address){
+      return listOwnerId[_index];
+   }
+
+   function getTask(address addr,uint _index) view public returns(
+   uint256,
+   string memory ,
+   bool 
+   )
+   {
+      List memory l = task[addr][_index];
+      return (l.id ,l.title ,l.completed);
+   }   
+
+   function getIsRegistered(address addr)public view returns(bool){
+      return isRegistred[addr];
+   }
+
+   function getIndex()public view returns(uint){
+      return index;
+   }
 }

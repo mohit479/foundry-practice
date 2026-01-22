@@ -151,6 +151,26 @@ function testOwnerIsPrankedAddress() public {
     }
 
 
+function testGetTaskWithCorrectIndex() public {
+    address user = USER2;
+
+    // Arrange: create multiple tasks
+    vm.prank(user);
+    todo.createtask("task1");
+
+    vm.prank(user);
+    todo.createtask("task2");
+
+    // Act: fetch second task (index = 1)
+    (uint256 id, string memory title, bool completed) = todo.getTask(user, 1);
+
+    // Assert
+    assertEq(id, 2);
+    assertEq(title, "task2");
+    assertFalse(completed);
+}
+
+
 
     modifier createTaskMod {
         vm.prank(USER2);

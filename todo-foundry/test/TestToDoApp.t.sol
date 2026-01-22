@@ -8,6 +8,9 @@ contract TestToDoApp  is Test{
     TodoApp todo;
     address owner= makeAddr("owner");
     address USER = makeAddr("User");
+    address USER2 = makeAddr("User2");
+
+
 
     function setUp()public{
         vm.prank(owner);
@@ -16,35 +19,124 @@ contract TestToDoApp  is Test{
         vm.deal(USER, 10 ether);
     }  
 
-    function testOwner() public{
-        assertEq(todo.getOwner(),owner);
-    }
+  function testOwnerIsTestContractWhenNoPrank() public {
+    TodoApp t = new TodoApp();
+    assertEq(t.getOwner(), address(this));
+}
 
-    function testCreateSingleTask()public{
-        uint oldIndex = todo.getIndex();
+function testOwnerIsPrankedAddress() public {
+    vm.prank(owner);
+    TodoApp t = new TodoApp();
+    assertEq(t.getOwner(), owner);
+}
 
-        vm.prank(USER);
-        todo.createtask("learn foundry");
 
-        (uint id ,string memory title ,bool compleated )= todo.getTask(USER, 0);
+    function testCreateTaskAddsTaskForCaller()public{
+        vm.prank(USER2);
+        todo.createtask("test task");
 
-        assertEq(id,1);
-        assertEq(title, "learn foundry");
+        (uint id ,string memory title , bool compleated)=todo.getTask(USER2,0);
+        assertEq(title,"test task");
+        assertEq(id, 1);
         assertEq(compleated, false);
-        assertEq(todo.getIndex(),oldIndex+1);
-        assertEq(todo.getIsRegistered(USER), true);
-        assertEq(todo.getListOwnerId(1),USER);
+
     }
 
-    function testMultipalTaskCreatedSingleUser()public{
+    function testCreateTaskIdUnique()public{
 
-        for(uint i =1; i<10 ;i++){
-            address addr = address(uint160(i));
-            vm.deal(addr,1 ether);
+        uint [] memory ids;
+
+        for (uint160 i = 0; i < 20; i++) {
+            address addr = address(i);
             vm.prank(addr);
-            todo.createtask("new task created");
+            todo.createtask("new task");
 
-            //REMAINING
+            uint task_index = todo.getTaskIndex(USER2);
+
+            for(uint j =0 ;j<ids.length;j++){
+                assert(task_index!=ids[j]);
+            } 
         }
+    }
+
+    function testCreateTaskRegistersUserOnFirstTask() public {
+    // Arrange
+    address user = makeAddr("user");
+
+    // Act
+    vm.prank(user);
+    todo.createtask("First Task");
+
+    // Assert
+    bool registered = todo.getIsRegistered(user);
+    assertTrue(registered);
+}
+
+
+    function testCreateTaskDoesNotReRegisterExistingUser() public {
+        vm.prank(USER2);
+        todo.createtask("task1");
+        uint oldIndex= todo.getIndex();
+        address oldUser= todo.getListOwnerId(oldIndex);
+
+        assertTrue(todo.getIsRegistered(USER2));
+
+        vm.prank(USER2);
+        todo.createtask("task2");
+
+        
+
+        uint newIndex= todo.getIndex();
+        address newUser= todo.getListOwnerId(newIndex);
+
+        assertEq(oldIndex, newIndex);
+        assertEq(oldUser, newUser);
+        assertEq(todo.getListOwnerId(oldIndex + 1), address(0));
+
+    }
+
+    function testCreateMultipleTasksForSameUser()public{
+
+        address addr = address(1);
+
+        for(uint160 i=1 ;i<=10;i++){
+
+            vm.prank(addr);
+            todo.createtask("task1");
+
+            (uint id ,,)=todo.getTask(addr,i-1);
+
+            assertEq(id,i);
+        }
+    }
+
+    function testCreateTasksForDifferentUsers()public{
+
+        //Task created by one user
+        address addr1 =address(1);
+        vm.prank(addr1);
+        todo.createtask("task1");
+
+        uint oldSizeOfTask= todo.getTaskIndex(addr1);
+
+        //Task created by next user
+        address addr2 =address(2);
+        vm.prank(addr2);
+        todo.createtask("task2");
+
+        //Check the task are isolated or not
+        uint newSizeOfTask= todo.getTaskIndex(addr1);
+        (uint id1 ,string memory titile1,)= todo.getTask(addr1, 0);
+        (uint id2 ,string memory titile2,)= todo.getTask(addr2, 0);
+        
+
+        assertEq(id1, 1);
+        assertEq(id2, 1);
+
+        assertEq(oldSizeOfTask, newSizeOfTask);
+
+        assertEq(titile1, "task1");
+        assertEq(titile2, "task2");
+
     }
 }

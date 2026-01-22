@@ -10,9 +10,10 @@ contract TodoApp {
    }
 
 
-mapping (uint256 => address)private listOwnerId;
-mapping (address => List[]) private task;            
-mapping (address => bool) private isRegistred;
+mapping (uint256 userId => address user)private listOwnerId;
+mapping (address user => List[] listOfTask) private task;            
+mapping (address user => bool isUser) private isRegistred;
+mapping (address user => uint taskIndex)private taskIndex;
 uint256 private index;
 address immutable private i_owner;
 
@@ -23,18 +24,34 @@ address immutable private i_owner;
 
 
    function createtask(string memory _task) public {
+      //logic for account holder task id
+     address sender=msg.sender;
+      
 
-      uint256 taskIndex=task[msg.sender].length+1;
-      index++;
-
-      if(!isRegistred[msg.sender]){
-         listOwnerId[index]=msg.sender;
-         isRegistred[msg.sender]=true;
+      if(!isRegistred[sender]){
+         index++;
+         listOwnerId[index]=sender; //GIVING UNIQUES INDEX TO EACH NEW USER
+         isRegistred[sender]=true; //REGISTERING THE USER
+         taskIndex[sender]=0; // SETING TASK ID TO 0
       }
+      taskIndex[sender]++;
 
-    List memory l =List(taskIndex,_task,false);
-    task[msg.sender].push(l); //Addin in task
+    List memory l =List(taskIndex[sender],_task,false);
+    task[sender].push(l); //Addin in task
    }
+
+   function removeTask(uint256 _index) public {
+    List[] storage l = task[msg.sender];
+
+    require(_index < l.length, "Invalid index");
+
+    for (uint256 i = _index; i < l.length - 1; i++) {
+        l[i] = l[i + 1];
+    }
+
+    l.pop();
+}
+
 
    function getListOwnerAlltask()public view returns(List[] memory){
       return task[msg.sender];
@@ -81,5 +98,8 @@ address immutable private i_owner;
 
    function getIndex()public view returns(uint){
       return index;
+   }
+   function getTaskIndex(address addr)public view returns(uint){
+      return taskIndex[addr];
    }
 }

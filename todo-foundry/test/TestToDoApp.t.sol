@@ -139,4 +139,22 @@ function testOwnerIsPrankedAddress() public {
         assertEq(titile2, "task2");
 
     }
+
+
+    function testGetListOwnerAllTaskReturnsCallerTasks()public createTaskMod{
+        vm.prank(USER2);
+        string memory title2=todo.getListOwnerAlltask()[0].title;
+
+        (,string memory title,)=todo.getTask(USER2, 0);
+        
+        assertEq(title,title2);
+    }
+
+
+
+    modifier createTaskMod {
+        vm.prank(USER2);
+        todo.createtask("Task created");
+        _;        
+    }
 }

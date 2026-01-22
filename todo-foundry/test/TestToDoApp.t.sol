@@ -170,6 +170,35 @@ function testGetTaskWithCorrectIndex() public {
     assertFalse(completed);
 }
 
+function testTaskRemovedProperly()public createTaskMod{
+    vm.prank(USER2);
+
+    todo.removeTask(0);
+
+    vm.prank(USER2);
+    assertEq(todo.getListOwnerAlltask().length,0);
+    
+}
+
+function testAfterRemovingTaskOrder()public{
+    for (uint160 i = 0; i < 3; i++) {
+        vm.prank(USER2);
+        todo.createtask("task");
+    }
+
+    vm.prank(USER2);
+    todo.removeTask(0);
+
+    vm.prank(USER2);
+    uint id1 =todo.getListOwnerAlltask()[0].id;
+    vm.prank(USER2);
+    uint id2 =todo.getListOwnerAlltask()[1].id;
+
+    assertEq(id1, 2);
+    assertEq(id2, 3);
+
+}
+
 
 
     modifier createTaskMod {

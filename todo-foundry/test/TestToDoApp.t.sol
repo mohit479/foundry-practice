@@ -70,7 +70,7 @@ function testOwnerIsPrankedAddress() public {
     // Assert
     bool registered = todo.getIsRegistered(user);
     assertTrue(registered);
-}
+    }
 
 
     function testCreateTaskDoesNotReRegisterExistingUser() public {
@@ -151,7 +151,7 @@ function testOwnerIsPrankedAddress() public {
     }
 
 
-function testGetTaskWithCorrectIndex() public {
+    function testGetTaskWithCorrectIndex() public {
     address user = USER2;
 
     // Arrange: create multiple tasks
@@ -168,36 +168,69 @@ function testGetTaskWithCorrectIndex() public {
     assertEq(id, 2);
     assertEq(title, "task2");
     assertFalse(completed);
-}
-
-function testTaskRemovedProperly()public createTaskMod{
-    vm.prank(USER2);
-
-    todo.removeTask(0);
-
-    vm.prank(USER2);
-    assertEq(todo.getListOwnerAlltask().length,0);
-    
-}
-
-function testAfterRemovingTaskOrder()public{
-    for (uint160 i = 0; i < 3; i++) {
-        vm.prank(USER2);
-        todo.createtask("task");
     }
 
-    vm.prank(USER2);
-    todo.removeTask(0);
+    function testTaskRemovedProperly()public createTaskMod{
+        vm.prank(USER2);
 
-    vm.prank(USER2);
-    uint id1 =todo.getListOwnerAlltask()[0].id;
-    vm.prank(USER2);
-    uint id2 =todo.getListOwnerAlltask()[1].id;
+        todo.removeTask(0);
 
-    assertEq(id1, 2);
-    assertEq(id2, 3);
+        vm.prank(USER2);
+        assertEq(todo.getListOwnerAlltask().length,0);
+        
+    }
 
-}
+    function testAfterRemovingTaskOrder()public{
+        for (uint160 i = 0; i < 3; i++) {
+            vm.prank(USER2);
+            todo.createtask("task");
+        }
+
+        vm.prank(USER2);
+        todo.removeTask(0);
+
+        vm.prank(USER2);
+        uint id1 =todo.getListOwnerAlltask()[0].id;
+        vm.prank(USER2);
+        uint id2 =todo.getListOwnerAlltask()[1].id;
+
+        assertEq(id1, 2);
+        assertEq(id2, 3);
+
+    }
+
+    function testSetTaskCompleation() public createTaskMod{
+        vm.prank(USER2);
+        todo.setTastcompleted(0);
+
+        vm.prank(USER2); 
+        assertTrue(todo.getListOwnerAlltask()[0].completed);
+    }
+
+    function testOnlyOwnerCanSeeAllTask()public createTaskMod{
+        vm.prank(owner);
+        uint l =todo.getAlltaskOfAllUser(1).length;
+
+        assertEq(l,1);
+    }
+
+    function testNonOwnerCannotSeeAllTask() public createTaskMod {
+    vm.prank(USER2);
+    vm.expectRevert("you are not owner");
+    todo.getAlltaskOfAllUser(1);
+    }
+
+    function testTaskCompleatedIsOutOfRange()public createTaskMod{
+        vm.prank(USER2);
+        vm.expectRevert();
+        todo.setTastcompleted(2);
+    }
+
+    function testRemoveTaskIsOutOfRange()public createTaskMod{
+        vm.prank(USER2);
+        vm.expectRevert();
+        todo.removeTask(2);
+    }
 
 
 
